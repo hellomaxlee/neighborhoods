@@ -52,19 +52,20 @@ def new_game():
 
 # Title and instructions
 st.title("Find the Fake NYC Neighborhood")
-st.write("Out of the 30 neighborhoods listed below, **one is completely made up** by AI. Can you spot the fake?")
+st.write("Out of the 30 neighborhoods listed below, **one is completely made up**. Can you spot the fake?")
 
-# Cooldown enforcement
+# Cooldown enforcement and auto-refresh
 if "cooldown_until" in st.session_state:
     remaining = int(st.session_state["cooldown_until"] - time.time())
     if remaining > 0:
-        st.warning("❌ You guessed wrong. Please wait before trying again.")
+        st.warning("You guessed wrong. Please wait before trying again.")
         st.markdown(f"**Time remaining: {remaining} seconds**")
         st_autorefresh(interval=1000, limit=remaining + 1)
         st.stop()
     else:
         del st.session_state["cooldown_until"]
         st.session_state["revealed"] = False
+        new_game()  # 🔁 Automatically start a fresh game after cooldown
 
 # Start or reset game
 if "options" not in st.session_state or st.button("New Game"):
