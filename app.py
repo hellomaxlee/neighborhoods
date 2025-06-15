@@ -40,15 +40,20 @@ Respond with only the name. No punctuation or explanation.
 # Create a new game
 def new_game():
     # Handle cooldown
+    # Countdown timer display
     if "cooldown_time" in st.session_state:
-        time_remaining = st.session_state["cooldown_time"] - time.time()
-        if time_remaining > 0:
-            st.warning(f"You must wait {int(time_remaining)} seconds before trying again.")
-            st.session_state.cooldown_active = True
-            return
-        else:
-            del st.session_state["cooldown_time"]
-            st.session_state.cooldown_active = False
+        remaining = st.session_state["cooldown_time"] - time.time()
+        if remaining > 0:
+            st.warning("⏳ Cooldown active! Try again soon.")
+    
+            # Display a countdown using session state + rerun
+            if "last_count" not in st.session_state:
+                st.session_state.last_count = int(remaining)
+
+        st.markdown(f"**Please wait: {int(remaining)} seconds**")
+        time.sleep(1)
+        st.session_state.last_count -= 1
+        st.experimental_rerun()
 
     real_selection = random.sample(REAL_NEIGHBORHOOD_POOL, 29)
     fake = generate_fake_neighborhood()
@@ -59,7 +64,6 @@ def new_game():
     st.session_state.options = all_options
     st.session_state.selected = None
     st.session_state.revealed = False
-    st.session_state.cooldown_active = False
 
 # Initialize app
 st.title("Find the Fake NYC Neighborhood")
