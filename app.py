@@ -83,7 +83,7 @@ if st.button("Submit Guess"):
         st.success("✅ Correct! You found the fake neighborhood.")
     else:
         st.error(f"❌ Incorrect. The fake neighborhood was: **{st.session_state.fake}**.")
-        st.session_state["cooldown_until"] = time.time() + 30
+        st.session_state["cooldown_until"] = time.time() + 60
 
 # Reveal full list after guess
 if st.session_state.get("revealed"):
