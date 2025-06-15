@@ -7,7 +7,7 @@ from streamlit_autorefresh import st_autorefresh
 # Load OpenAI client
 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
-# Full population of real NYC neighborhoods
+# Full pool of real NYC neighborhoods
 REAL_NEIGHBORHOOD_POOL = [
     "Harlem", "Astoria", "Flushing", "Bushwick", "SoHo", "TriBeCa", "Williamsburg",
     "Bedford-Stuyvesant", "Greenpoint", "Chelsea", "Chinatown", "East Village", "Upper East Side",
@@ -19,7 +19,7 @@ REAL_NEIGHBORHOOD_POOL = [
     "Gravesend", "Sheepshead Bay", "Borough Park", "Corona", "Marine Park", "Elmhurst"
 ]
 
-# Generate a fake neighborhood name using OpenAI
+# Generate a fake neighborhood via OpenAI
 def generate_fake_neighborhood():
     prompt = """
 Invent one plausible-sounding, entirely fictional New York City neighborhood name. 
@@ -38,50 +38,53 @@ Respond with only the name. No punctuation or explanation.
     except Exception as e:
         return f"GPT error: {e}"
 
-# Generate a new round
+# Start a new game
 def new_game():
     real_selection = random.sample(REAL_NEIGHBORHOOD_POOL, 29)
     fake = generate_fake_neighborhood()
     all_options = real_selection + [fake]
     random.shuffle(all_options)
-
+    
     st.session_state.options = all_options
     st.session_state.fake = fake
     st.session_state.selected = None
     st.session_state.revealed = False
 
-# App title
+# Title and instructions
 st.title("Find the Fake NYC Neighborhood")
 st.write("Out of the 30 neighborhoods listed below, **one is completely made up** by AI. Can you spot the fake?")
 
-# Check cooldown
+# Cooldown enforcement
 if "cooldown_until" in st.session_state:
     remaining = int(st.session_state["cooldown_until"] - time.time())
     if remaining > 0:
         st.warning("❌ You guessed wrong. Please wait before trying again.")
         st.markdown(f"**Time remaining: {remaining} seconds**")
-        st_autorefresh(interval=1000, limit=remaining)
+        st_autorefresh(interval=1000, limit=remaining + 1)
         st.stop()
     else:
         del st.session_state["cooldown_until"]
+        st.session_state["revealed"] = False
 
-# Start new game if needed
+# Start or reset game
 if "options" not in st.session_state or st.button("New Game"):
+    st.session_state["revealed"] = False
     new_game()
 
-# Show guessing interface
-selected = st.radio("Which one do you think is fake?", st.session_state.options, key="neighborhood_guess")
+# Display options
+selected = st.radio("Which neighborhood do you think is fake?", st.session_state.options, key="neighborhood_guess")
 st.session_state.selected = selected
 
+# Guess submission
 if st.button("Submit Guess"):
     st.session_state.revealed = True
     if st.session_state.selected == st.session_state.fake:
         st.success("✅ Correct! You found the fake neighborhood.")
     else:
-        st.error(f"❌ Incorrect! The fake neighborhood was: **{st.session_state.fake}**.")
-        st.session_state["cooldown_until"] = time.time() + 30  # Set 30s cooldown
+        st.error(f"❌ Incorrect. The fake neighborhood was: **{st.session_state.fake}**.")
+        st.session_state["cooldown_until"] = time.time() + 30
 
-# Reveal answers if user has guessed
+# Reveal full list after guess
 if st.session_state.get("revealed"):
     st.markdown("### Answer Key")
     for name in st.session_state.options:
